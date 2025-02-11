@@ -168,7 +168,7 @@ const showDialog = (
 		},
 		[AccountActions.DELETE_ACCOUNT]: {
 			successAction: () => {
-				storeAuth.deleteAccount()
+				void storeAuth.deleteAccount()
 			},
 			title: 'Delete account',
 			message: 'Are you sure you want to delete your account?'

@@ -15,7 +15,7 @@
 			side
 			top
 		>
-			<q-checkbox v-model="product.completed" />
+			<q-checkbox v-model="isCompleted" />
 		</q-item-section>
 		<q-item-section>
 			<q-item-label :class="{ 'text-strike': product.completed }">
@@ -76,10 +76,12 @@ import type { Product } from 'src/models'
 
 const storeList = useListStore()
 
-defineProps<{
+const props = defineProps<{
 	product: Product
 	id: string
 }>()
+
+const isCompleted = ref(props.product.completed)
 
 const $q = useQuasar()
 const promptToDelete = (id: string) => {

@@ -12,7 +12,7 @@
 			top
 		>
 			<q-checkbox
-				v-model="product.selected"
+				v-model="isSelected"
 				class="no-pointer-events"
 			/>
 		</q-item-section>
@@ -82,6 +82,7 @@ const name = computed(() => useCleanString(props.product.name))
 const keywords = computed(() => useCleanString(props.product?.keywords))
 
 const showEditProduct = ref(false)
+const isSelected = ref(props.product.selected)
 
 const filtered = computed(() => {
 	if (!search.value) return props.product.name

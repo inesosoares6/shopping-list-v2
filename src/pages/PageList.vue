@@ -91,8 +91,8 @@ watch(
 	() => storeSettings.settings,
 	() => {
 		if (storeSettings.settings.list) {
-			storeList.fbReadData()
-			storeCatalog.fbReadData()
+			void storeList.fbReadData()
+			void storeCatalog.fbReadData()
 		}
 	},
 	{

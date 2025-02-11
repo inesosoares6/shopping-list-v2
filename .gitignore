@@ -6,6 +6,7 @@ node_modules
 .quasar
 /dist
 /quasar.config.*.temporary.compiled*
+/android
 
 /src/boot
 /src-electron

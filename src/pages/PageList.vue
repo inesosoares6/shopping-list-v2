@@ -42,8 +42,9 @@
 				</div>
 
 				<q-dialog v-model="showUsernamePopup">
-					<add-settings
-						v-for="payload in useSettingsPopupPayload()"
+					<AddSettings
+						v-for="(payload, index) in useSettingsPopupPayload()"
+						:key="index"
 						:payload="payload"
 					/>
 				</q-dialog>

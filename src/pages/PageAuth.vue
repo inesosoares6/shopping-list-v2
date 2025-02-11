@@ -12,6 +12,7 @@
 			>
 				<q-tab
 					v-for="t in tabs"
+					:key="t"
 					:name="t"
 					:label="capitalize(t)"
 				/>
@@ -25,6 +26,7 @@
 			>
 				<q-tab-panel
 					v-for="t in tabs"
+					:key="t"
 					:name="t"
 				>
 					<login-register :tab="tab" />
@@ -40,7 +42,7 @@ import LoginRegister from 'src/components/Auth/LoginRegister.vue'
 import { capitalize } from 'src/functions/utils'
 
 const tabs = ['login', 'register']
-const tab = ref(tabs[0])
+const tab = ref(tabs[0] as string)
 </script>
 
 <style scoped lang="css">

@@ -1,4 +1,9 @@
-import { PayloadSettings, Product, Settings, StateSettings } from './../models'
+import type {
+	PayloadSettings,
+	Product,
+	Settings,
+	StateSettings
+} from './../models'
 import { defineStore } from 'pinia'
 import { firebaseAuth, firebaseDb } from 'src/boot/firebase'
 import { showErrorMessage } from 'src/functions/utils'
@@ -69,23 +74,25 @@ export const useSettingsStore = defineStore('storeSettings', {
 				this.listKeys = Object.keys(snapshot.val())
 			})
 		},
-		removeListFromUserSettings(listId: string) {
+		async removeListFromUserSettings(listId: string) {
 			const removingSelectedList = listId === this.settings.list
 			const userId = firebaseAuth.currentUser?.uid
 			const listSettings = firebaseDb.ref(
 				'users/' + userId + '/lists/' + listId
 			)
-			listSettings.remove(error => {
-				if (error) showErrorMessage(error.message)
-				else if (this.getListsNames.length && removingSelectedList) {
-					this.setList(this.getListsNames[0].value)
+			try {
+				await listSettings.remove()
+				if (this.getListsNames.length && removingSelectedList) {
+					await this.setList(this.getListsNames[0]?.value as string)
 				}
-			})
+			} catch (error: unknown) {
+				showErrorMessage((error as Error).message)
+			}
 		},
 		sanitizeLists() {
 			Object.keys(this.listsPermissions).forEach(listKey => {
 				if (!this.listKeys.includes(listKey)) {
-					this.removeListFromUserSettings(listKey)
+					void this.removeListFromUserSettings(listKey)
 				}
 			})
 		},
@@ -112,46 +119,52 @@ export const useSettingsStore = defineStore('storeSettings', {
 			if (!this.listKeys.includes(listId)) {
 				listId = uid()
 				const listRef = firebaseDb.ref('users/' + userId + '/lists')
-				listRef.update({ [listId]: 'admin' }, error => {
+				await listRef.update({ [listId]: 'admin' }, error => {
 					if (error) showErrorMessage(error.message)
 				})
 				const listCreationRef = firebaseDb.ref('lists/' + listId)
-				listCreationRef.set({ name: value }, error => {
-					if (error) showErrorMessage(error.message)
-				})
+				try {
+					await listCreationRef.set({ name: value })
+				} catch (error: unknown) {
+					showErrorMessage((error as Error).message)
+				}
 			} else if (!Object.keys(this.listsPermissions).includes(listId)) {
 				const listCreationRef = firebaseDb.ref('users/' + userId + '/lists')
-				listCreationRef.update({ [listId]: 'shared' }, error => {
+				await listCreationRef.update({ [listId]: 'shared' }, error => {
 					if (error) showErrorMessage(error.message)
 				})
 			}
 
 			const userRef = firebaseDb.ref('users/' + userId)
-			userRef.update({ list: listId }, error => {
+			await userRef.update({ list: listId }, error => {
 				if (error) showErrorMessage(error.message)
 			})
 
-			Promise.all([storeList.fbReadData(), storeCatalog.fbReadData()])
+			await Promise.all([storeList.fbReadData(), storeCatalog.fbReadData()])
 		},
-		setUsername(value: string) {
+		async setUsername(value: string) {
 			const userId = firebaseAuth.currentUser?.uid
 			const userRef = firebaseDb.ref('users/' + userId)
-			userRef.update({ username: value }, error => {
-				if (error) showErrorMessage(error.message)
-			})
+			try {
+				await userRef.update({ username: value })
+			} catch (error: unknown) {
+				showErrorMessage((error as Error).message)
+			}
 		},
-		updateListName(value: string) {
+		async updateListName(value: string) {
 			const listRef = firebaseDb.ref('lists/' + this.settings.list)
-			listRef.update({ name: value }, error => {
-				if (error) showErrorMessage(error.message)
-			})
+			try {
+				await listRef.update({ name: value })
+			} catch (error: unknown) {
+				showErrorMessage((error as Error).message)
+			}
 		},
 		async cloneList(listName: string) {
 			const storeCatalog = useCatalogStore()
 			const products = storeCatalog.products
 			await this.setList(listName)
 			Object.values(products).forEach((element: Product) => {
-				storeCatalog.fbAddProduct({
+				void storeCatalog.fbAddProduct({
 					id: uid(),
 					product: {
 						...element,
@@ -162,12 +175,12 @@ export const useSettingsStore = defineStore('storeSettings', {
 				})
 			})
 		},
-		fbReadData() {
+		async fbReadData() {
 			const userId = firebaseAuth.currentUser?.uid
 			const listSettings = firebaseDb.ref('users/' + userId)
 
 			// initial check for data
-			listSettings.once(
+			await listSettings.once(
 				'value',
 				() => {
 					this.settingsDownloaded = true
@@ -195,14 +208,14 @@ export const useSettingsStore = defineStore('storeSettings', {
 				})
 			})
 		},
-		fbDeleteList() {
+		async fbDeleteList() {
 			const listRef = firebaseDb.ref('lists/' + this.getSettings.list)
-			listRef.remove(error => {
-				if (error) showErrorMessage(error.message)
-				else {
-					this.removeListFromUserSettings(this.getSettings.list)
-				}
-			})
+			try {
+				await listRef.remove() // No callback needed
+				await this.removeListFromUserSettings(this.getSettings.list)
+			} catch (error: unknown) {
+				showErrorMessage((error as Error).message)
+			}
 		}
 	}
 })

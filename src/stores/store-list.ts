@@ -1,7 +1,7 @@
 import { showErrorMessage } from 'src/functions/utils'
 import { defineStore } from 'pinia'
 import { firebaseDb } from 'src/boot/firebase'
-import { Payload, PayloadUpdate, ProductObject, Product } from 'src/models'
+import type { Payload, PayloadUpdate, ProductObject, Product } from 'src/models'
 import { Notify } from 'quasar'
 import { useSettingsStore } from 'src/stores/store-settings'
 import { useCatalogStore } from 'src/stores/store-catalog'
@@ -13,41 +13,43 @@ export const useListStore = defineStore('storeList', {
 	}),
 	getters: {
 		getProductsSorted: state => {
-			let productsSorted = {} as ProductObject,
+			const productsSorted = {} as ProductObject,
 				keysOrdered = Object.keys(state.products)
 
 			keysOrdered.sort((a, b) => {
-				let productAProp = (state.products[a]['name'] as string).toLowerCase(),
-					productBProp = (state.products[b]['name'] as string).toLowerCase()
+				const productAProp = (state.products[a] as Product)[
+						'name'
+					].toLowerCase(),
+					productBProp = (state.products[b] as Product)['name'].toLowerCase()
 				if (productAProp > productBProp) return 1
 				else if (productAProp < productBProp) return -1
 				else return 0
 			})
 
 			keysOrdered.forEach(key => {
-				productsSorted[key] = state.products[key]
+				productsSorted[key] = state.products[key] as Product
 			})
 
 			return productsSorted
 		},
 		getProductsTodo() {
-			let productsSorted = this.getProductsSorted
-			let products = {} as ProductObject
+			const productsSorted = this.getProductsSorted
+			const products = {} as ProductObject
 			Object.keys(productsSorted).forEach(key => {
-				let product = productsSorted[key]
-				if (!product.completed) {
-					products[key] = product
+				const product = productsSorted[key]
+				if (!product?.completed) {
+					products[key] = product as Product
 				}
 			})
 
 			return products
 		},
 		getProductsCompleted() {
-			let productsSorted = this.getProductsSorted
-			let products = {} as ProductObject
+			const productsSorted = this.getProductsSorted
+			const products = {} as ProductObject
 			Object.keys(productsSorted).forEach(key => {
-				let product = productsSorted[key]
-				if (product.completed) {
+				const product = productsSorted[key]
+				if (product?.completed) {
 					products[key] = product
 				}
 			})
@@ -56,7 +58,7 @@ export const useListStore = defineStore('storeList', {
 	},
 	actions: {
 		updateProduct(payload: PayloadUpdate) {
-			Object.assign(this.products[payload.id], payload.updates)
+			Object.assign(this.products[payload.id] as Product, payload.updates)
 		},
 		deleteProduct(id: string) {
 			delete this.products[id]
@@ -70,14 +72,14 @@ export const useListStore = defineStore('storeList', {
 		setProductsDownloaded(value: boolean) {
 			this.productsDownloaded = value
 		},
-		fbReadData() {
+		async fbReadData() {
 			const storeSettings = useSettingsStore()
 			const listProducts = firebaseDb.ref(
 				'lists/' + storeSettings.getSettings.list + '/list/'
 			)
 
 			// initial check for data
-			listProducts.once(
+			await listProducts.once(
 				'value',
 				() => {
 					this.productsDownloaded = true
@@ -110,53 +112,55 @@ export const useListStore = defineStore('storeList', {
 				this.deleteProduct(snapshot.key!)
 			})
 		},
-		fbAddProduct(payload: Payload) {
+		async fbAddProduct(payload: Payload) {
 			const storeSettings = useSettingsStore()
 			const productRef = firebaseDb.ref(
 				'lists/' + storeSettings.getSettings.list + '/list/' + payload.id
 			)
 			if (!Object.keys(this.products).includes(payload.id)) {
-				productRef.set(payload.product, error => {
-					if (error) showErrorMessage(error.message)
-					else Notify.create('Product added!')
-				})
+				try {
+					await productRef.set(payload.product)
+					Notify.create('Product added!')
+				} catch (error: unknown) {
+					showErrorMessage((error as Error).message)
+				}
 			}
 		},
-		fbUpdateProduct(payload: PayloadUpdate) {
+		async fbUpdateProduct(payload: PayloadUpdate) {
 			const storeSettings = useSettingsStore()
 			const productRef = firebaseDb.ref(
 				'lists/' + storeSettings.getSettings.list + '/list/' + payload.id
 			)
-			productRef.update(payload.updates, error => {
-				if (error) showErrorMessage(error.message)
-				else {
-					const keys = Object.keys(payload.updates)
-					if (!(keys.includes('completed') && keys.length == 1)) {
-						Notify.create('Product updated!')
-					}
+			try {
+				await productRef.update(payload.updates)
+				const keys = Object.keys(payload.updates)
+				if (!(keys.includes('completed') && keys.length == 1)) {
+					Notify.create('Product updated!')
 				}
-			})
+			} catch (error: unknown) {
+				showErrorMessage((error as Error).message)
+			}
 		},
-		fbDeleteProduct(productId: string, cart: boolean) {
+		async fbDeleteProduct(productId: string, cart: boolean) {
 			const storeSettings = useSettingsStore()
 			const storeCatalog = useCatalogStore()
 			const productRef = firebaseDb.ref(
 				'lists/' + storeSettings.getSettings.list + '/list/' + productId
 			)
-			storeCatalog.fbUpdateProduct({
+			await storeCatalog.fbUpdateProduct({
 				id: productId,
 				updates: {
 					inList: false
 				}
 			})
 
-			productRef.remove(error => {
-				if (error) showErrorMessage(error.message)
-				else
-					cart
-						? Notify.create('Cart emptied!')
-						: Notify.create('Product deleted!')
-			})
+			try {
+				await productRef.remove()
+				if (cart) Notify.create('Cart emptied!')
+				else Notify.create('Product deleted!')
+			} catch (error: unknown) {
+				showErrorMessage((error as Error).message)
+			}
 		}
 	}
 })

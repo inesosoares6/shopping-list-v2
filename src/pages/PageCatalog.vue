@@ -3,8 +3,8 @@
 		<div class="q-pa-md absolute full-width full-height column">
 			<template v-if="areSettingsLoaded">
 				<div class="row q-mb-lg">
-					<search />
-					<sort />
+					<SearchBox />
+					<SortSelect />
 				</div>
 
 				<p v-if="search && !thereAreProductInList">No search results.</p>
@@ -24,7 +24,7 @@
 				</div>
 
 				<q-scroll-area class="q-scroll-area-products">
-					<no-products
+					<NoProducts
 						v-if="!thereAreProductInList && !search"
 						@show-add-product="showAddProduct = true"
 						text="Catalog is empty!"
@@ -32,7 +32,7 @@
 						:show-button="true"
 					/>
 
-					<list-catalog
+					<ListCatalog
 						v-if="thereAreProductInList"
 						:catalog-list-items="getProducts"
 					/>
@@ -50,14 +50,15 @@
 				</div>
 
 				<q-dialog v-model="showUsernamePopup">
-					<add-settings
-						v-for="payload in useSettingsPopupPayload()"
+					<AddSettings
+						v-for="(payload, index) in useSettingsPopupPayload()"
+						:key="index"
 						:payload="payload"
 					/>
 				</q-dialog>
 
 				<q-dialog v-model="showAddProduct">
-					<add-product @close="showAddProduct = false" />
+					<AddProduct @close="showAddProduct = false" />
 				</q-dialog>
 			</template>
 			<template v-else>
@@ -78,8 +79,8 @@ import NoProducts from 'src/components/Products/NoProducts.vue'
 import ListCatalog from 'src/components/Products/Catalog/ListCatalog.vue'
 import AddProduct from 'src/components/Products/Modals/AddProduct.vue'
 import AddSettings from 'src/components/Products/Modals/AddSettings.vue'
-import Search from 'src/components/Products/Tools/Search.vue'
-import Sort from 'src/components/Products/Tools/Sort.vue'
+import SearchBox from 'src/components/Products/Tools/SearchBox.vue'
+import SortSelect from 'src/components/Products/Tools/SortSelect.vue'
 import { useCatalogStore } from 'src/stores/store-catalog'
 import { useSettingsStore } from 'src/stores/store-settings'
 import { useSettingsPopupPayload } from 'src/composables/useSettingsPopupPayload'

@@ -8,11 +8,18 @@ export const addListPayload = {
 export const useSettingsPopupPayload = () => {
 	const storeSettings = useSettingsStore()
 	const payload = [
-		{ ...addListPayload, successAction: storeSettings.setList },
+		{
+			...addListPayload,
+			successAction: (value: string) => {
+				void storeSettings.setList(value)
+			}
+		},
 		{
 			title: 'Add username',
 			message: 'Insert your username',
-			successAction: storeSettings.setUsername
+			successAction: (value: string) => {
+				void storeSettings.setUsername(value)
+			}
 		}
 	]
 	return payload.filter(

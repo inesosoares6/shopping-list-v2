@@ -59,15 +59,17 @@
 			</q-item>
 		</q-list>
 		<q-list
+			v-for="(actionItem, index) in actionItems"
+			:key="index"
 			class="q-mb-md"
 			bordered
 			padding
-			v-for="actionItem in actionItems"
 		>
 			<q-item-label header>{{ actionItem.title }}</q-item-label>
 
 			<q-item
-				v-for="action in actionItem.items"
+				v-for="(action, index) in actionItem.items"
+				:key="index"
 				tag="label"
 				v-ripple
 				@click="action.onClickAction"
@@ -93,11 +95,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, Ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import type { Ref } from 'vue'
 import { useSettingsStore } from 'src/stores/store-settings'
 import { useAuthStore } from 'src/stores/store-auth'
 import { useCatalogStore } from 'src/stores/store-catalog'
 import { useQuasar } from 'quasar'
+import type { PromptInputType } from 'quasar'
 import { Share } from '@capacitor/share'
 import { addListPayload } from 'src/composables/useSettingsPopupPayload'
 import {
@@ -120,8 +124,8 @@ const list = computed({
 	get() {
 		return storeSettings.listNames[storeSettings.getSettings.list]
 	},
-	set(newValue) {
-		storeSettings.setList(newValue)
+	set(newValue: string) {
+		void storeSettings.setList(newValue)
 	}
 })
 
@@ -130,38 +134,56 @@ const username = computed({
 		return storeSettings.getSettings.username
 	},
 	set(newValue) {
-		storeSettings.setUsername(newValue)
+		void storeSettings.setUsername(newValue)
 	}
 })
 
 const getWarningColor = (key: string) =>
-	['delete', 'remove'].includes(key.split('_')[0])
+	['delete', 'remove'].includes(key.split('_')[0] as string)
 
 const $q = useQuasar()
 const showDialog = (
 	key: AdminActions | GuestActions | AccountActions | GeneralActions
 ) => {
-	const details: any = {
+	const details: Record<
+		string,
+		{
+			title?: string
+			message?: string
+			successAction: (value: string) => void
+			promptType?: string
+		}
+	> = {
 		[AccountActions.EMAIL]: {
-			successAction: storeAuth.emailUpdate,
+			successAction: value => {
+				storeAuth.emailUpdate(value)
+			},
 			promptType: 'text'
 		},
 		[AccountActions.PASSWORD]: {
-			successAction: storeAuth.passwordUpdate,
+			successAction: value => {
+				storeAuth.passwordUpdate(value)
+			},
 			promptType: 'password'
 		},
 		[AccountActions.DELETE_ACCOUNT]: {
-			successAction: storeAuth.deleteAccount,
+			successAction: () => {
+				storeAuth.deleteAccount()
+			},
 			title: 'Delete account',
 			message: 'Are you sure you want to delete your account?'
 		},
 		[AdminActions.DELETE_LIST]: {
-			successAction: storeSettings.fbDeleteList,
+			successAction: () => {
+				void storeSettings.fbDeleteList()
+			},
 			title: `Delete list ${list.value}`,
 			message: `You have ${getNumberOfProducts.value} products in ${list.value} list. Are you sure you want to delete the entire list?`
 		},
 		[AdminActions.LIST_NAME]: {
-			successAction: storeSettings.updateListName,
+			successAction: value => {
+				void storeSettings.updateListName(value)
+			},
 			title: `Update list name (current: ${list.value})`,
 			message: 'Write the new list name',
 			promptType: 'text'
@@ -172,12 +194,16 @@ const showDialog = (
 			promptType: 'text'
 		},
 		[GuestActions.REMOVE_LIST]: {
-			successAction: () => storeSettings.removeListFromUserSettings(list.value),
+			successAction: () => {
+				void storeSettings.removeListFromUserSettings(list.value as string)
+			},
 			title: 'Remove shared list',
 			message: 'Are you sure you want to remove this list from your account?'
 		},
 		[GuestActions.CLONE]: {
-			successAction: storeSettings.cloneList,
+			successAction: value => {
+				void storeSettings.cloneList(value)
+			},
 			title: `Clone catalog from ${list.value}`,
 			message: `The new list will be created with ${getNumberOfProducts.value} products. Write its name`,
 			promptType: 'text'
@@ -187,12 +213,10 @@ const showDialog = (
 	$q.dialog({
 		title: details[key]?.title ?? `Update ${key}`,
 		message: details[key]?.message ?? `Write the new ${key}`,
-		prompt: details[key]?.promptType
-			? {
-					model: '',
-					type: details[key].promptType
-			  }
-			: undefined,
+		prompt: {
+			model: '',
+			type: details[key]?.promptType as PromptInputType
+		},
 		ok: {
 			push: true
 		},
@@ -200,7 +224,7 @@ const showDialog = (
 			color: 'negative'
 		}
 	}).onOk(data => {
-		details[key].successAction(data)
+		details[key]?.successAction(data)
 	})
 }
 
@@ -238,8 +262,8 @@ const adminListActions: Ref<
 	{
 		label: 'Share list',
 		key: AdminActions.SHARE,
-		onClickAction: () => {
-			Share.share({
+		onClickAction: async () => {
+			await Share.share({
 				text: storeSettings.getSettings.list
 			})
 		}
@@ -266,8 +290,8 @@ const guestListActions: Ref<
 	{
 		label: 'Share list',
 		key: GuestActions.SHARE,
-		onClickAction: () => {
-			Share.share({
+		onClickAction: async () => {
+			await Share.share({
 				text: storeSettings.getSettings.list
 			})
 		}

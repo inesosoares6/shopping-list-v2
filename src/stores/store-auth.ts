@@ -9,7 +9,7 @@ import {
 	updateEmail,
 	deleteUser
 } from 'firebase/auth'
-import { LoginInfo } from 'src/models'
+import type { LoginInfo } from 'src/models'
 import { showErrorMessage } from 'src/functions/utils'
 import { useSettingsStore } from 'src/stores/store-settings'
 import { Notify } from 'quasar'
@@ -23,18 +23,18 @@ export const useAuthStore = defineStore('storeAuth', {
 			this.loggedIn = value
 		},
 		handleAuthStateChange() {
-			firebaseAuth.onAuthStateChanged(user => {
+			firebaseAuth.onAuthStateChanged(async user => {
 				Loading.hide()
 				const storeSettings = useSettingsStore()
 				if (user) {
 					this.setLoggedIn(true)
-					this.router.push('/')
-					storeSettings.fbReadData()
+					await this.router.push('/')
+					await storeSettings.fbReadData()
 				} else {
-					storeSettings.clearProducts()
+					await storeSettings.clearProducts()
 					storeSettings.clearSettings()
 					this.setLoggedIn(false)
-					this.router.replace('/auth')
+					await this.router.replace('/auth')
 				}
 			})
 		},
@@ -64,8 +64,8 @@ export const useAuthStore = defineStore('storeAuth', {
 					showErrorMessage(error.message)
 				})
 		},
-		logoutUser() {
-			signOut(firebaseAuth)
+		async logoutUser() {
+			await signOut(firebaseAuth)
 		},
 		passwordUpdate(newPassword: string) {
 			const user = firebaseAuth.currentUser
@@ -91,21 +91,22 @@ export const useAuthStore = defineStore('storeAuth', {
 					})
 			}
 		},
-		deleteAccount() {
+		async deleteAccount() {
 			const user = firebaseAuth.currentUser
 			if (user !== null) {
 				const userRef = firebaseDb.ref('users/' + user.uid)
-				userRef.remove(error => {
-					if (error) showErrorMessage(error.message)
-					else
-						deleteUser(user)
-							.then(() => {
-								Notify.create('Account deleted!')
-							})
-							.catch((error: { message: string }) => {
-								showErrorMessage(error.message)
-							})
-				})
+				try {
+					await userRef.remove()
+					deleteUser(user)
+						.then(() => {
+							Notify.create('Account deleted!')
+						})
+						.catch((error: { message: string }) => {
+							showErrorMessage(error.message)
+						})
+				} catch (error: unknown) {
+					showErrorMessage((error as Error).message)
+				}
 			}
 		}
 	}

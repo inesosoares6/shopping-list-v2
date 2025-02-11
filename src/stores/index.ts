@@ -1,5 +1,6 @@
 import { defineStore } from '#q-app/wrappers'
 import { createPinia } from 'pinia'
+import { Router } from 'vue-router'
 
 /*
  * When adding new properties to stores, you should also
@@ -10,6 +11,7 @@ declare module 'pinia' {
   // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   export interface PiniaCustomProperties {
     // add your custom properties here, if any
+		readonly router: Router
   }
 }
 

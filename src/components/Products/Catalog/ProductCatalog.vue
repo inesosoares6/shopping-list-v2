@@ -82,7 +82,7 @@ const name = computed(() => useCleanString(props.product.name))
 const keywords = computed(() => useCleanString(props.product?.keywords))
 
 const showEditProduct = ref(false)
-const isSelected = ref(props.product.selected)
+const isSelected = computed(() => props.product.selected)
 
 const filtered = computed(() => {
 	if (!search.value) return props.product.name

@@ -68,7 +68,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useQuasar } from 'quasar'
 import EditProduct from 'src/components/Products/Modals/EditProduct.vue'
 import { useListStore } from 'src/stores/store-list'
@@ -81,7 +81,7 @@ const props = defineProps<{
 	id: string
 }>()
 
-const isCompleted = ref(props.product.completed)
+const isCompleted = computed(() => props.product.completed)
 
 const $q = useQuasar()
 const promptToDelete = (id: string) => {

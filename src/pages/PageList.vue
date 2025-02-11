@@ -3,7 +3,7 @@
 		<div class="q-pa-md absolute full-width full-height column">
 			<template v-if="areSettingsLoaded">
 				<q-scroll-area class="q-scroll-area-products">
-					<no-products
+					<NoProducts
 						v-if="!Object.keys(getProductsTodo).length"
 						@show-add-product="
 							storeCatalog.addProductsToList(favProductsToList)
@@ -13,12 +13,12 @@
 						:show-button="showButtonFavorites"
 					/>
 
-					<todo-list
+					<TodoList
 						v-if="Object.keys(getProductsTodo).length"
 						:products-todo="getProductsTodo"
 					/>
 
-					<cart-list
+					<CartList
 						v-if="Object.keys(getProductsCompleted).length"
 						:products-completed="getProductsCompleted"
 						class="q-mb-xl"
@@ -41,7 +41,7 @@
 					/>
 				</div>
 
-				<q-dialog v-model="showUsernamePopup">
+				<q-dialog v-if="showUsernamePopup">
 					<AddSettings
 						v-for="(payload, index) in useSettingsPopupPayload()"
 						:key="index"

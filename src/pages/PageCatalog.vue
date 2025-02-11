@@ -49,7 +49,7 @@
 					/>
 				</div>
 
-				<q-dialog v-model="showUsernamePopup">
+				<q-dialog v-if="showUsernamePopup">
 					<AddSettings
 						v-for="(payload, index) in useSettingsPopupPayload()"
 						:key="index"

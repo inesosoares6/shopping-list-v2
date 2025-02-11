@@ -198,15 +198,6 @@ export const useSettingsStore = defineStore('storeSettings', {
 					updates: setting
 				})
 			})
-
-			//child changed
-			listSettings.on('child_changed', snapshot => {
-				const setting = snapshot.val()
-				this.updateSetting({
-					id: snapshot.key! as keyof Settings,
-					updates: setting
-				})
-			})
 		},
 		async fbDeleteList() {
 			const listRef = firebaseDb.ref('lists/' + this.getSettings.list)

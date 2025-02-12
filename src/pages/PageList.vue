@@ -41,13 +41,13 @@
 					/>
 				</div>
 
-				<q-dialog v-if="showUsernamePopup">
+				<div v-if="showUsernamePopup">
 					<AddSettings
 						v-for="(payload, index) in useSettingsPopupPayload()"
 						:key="index"
 						:payload="payload"
 					/>
-				</q-dialog>
+				</div>
 			</template>
 			<template v-else>
 				<span class="absolute-center">

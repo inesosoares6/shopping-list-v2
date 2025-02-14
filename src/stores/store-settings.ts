@@ -175,20 +175,18 @@ export const useSettingsStore = defineStore('storeSettings', {
 				})
 			})
 		},
-		async fbReadData() {
+		fbReadData() {
 			const userId = firebaseAuth.currentUser?.uid
 			const listSettings = firebaseDb.ref('users/' + userId)
 
 			// initial check for data
-			await listSettings.once(
-				'value',
-				() => {
+			try {
+				void listSettings.once('value', () => {
 					this.settingsDownloaded = true
-				},
-				error => {
-					showErrorMessage(error.message)
-				}
-			)
+				})
+			} catch (error: unknown) {
+				showErrorMessage((error as Error).message)
+			}
 
 			// child added
 			listSettings.on('child_added', snapshot => {

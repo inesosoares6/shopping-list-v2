@@ -15,7 +15,6 @@ const props = defineProps<{
 }>()
 
 const $q = useQuasar()
-
 onMounted(() => {
 	$q.dialog({
 		title: props.payload.title,

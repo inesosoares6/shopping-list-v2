@@ -153,19 +153,17 @@ export const useCatalogStore = defineStore('storeCatalog', {
 
 			// child added
 			catalogProducts.on('child_added', snapshot => {
-				const product = snapshot.val()
 				this.addProduct({
 					id: snapshot.key!,
-					product: product
+					product: snapshot.val()
 				})
 			})
 
 			//child changed
 			catalogProducts.on('child_changed', snapshot => {
-				const product = snapshot.val()
 				this.updateProduct({
 					id: snapshot.key!,
-					updates: product
+					updates: snapshot.val()
 				})
 			})
 

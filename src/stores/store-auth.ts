@@ -23,18 +23,18 @@ export const useAuthStore = defineStore('storeAuth', {
 			this.loggedIn = value
 		},
 		handleAuthStateChange() {
-			firebaseAuth.onAuthStateChanged(async user => {
+			firebaseAuth.onAuthStateChanged(user => {
 				Loading.hide()
 				const storeSettings = useSettingsStore()
 				if (user) {
 					this.setLoggedIn(true)
-					await this.router.push('/')
-					await storeSettings.fbReadData()
+					void this.router.push('/')
+					storeSettings.fbReadData()
 				} else {
-					await storeSettings.clearProducts()
+					storeSettings.clearProducts()
 					storeSettings.clearSettings()
 					this.setLoggedIn(false)
-					await this.router.replace('/auth')
+					void this.router.replace('/auth')
 				}
 			})
 		},

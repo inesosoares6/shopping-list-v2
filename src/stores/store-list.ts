@@ -91,19 +91,17 @@ export const useListStore = defineStore('storeList', {
 
 			// child added
 			listProducts.on('child_added', snapshot => {
-				const product = snapshot.val()
 				this.addProduct({
 					id: snapshot.key!,
-					product: product
+					product: snapshot.val()
 				})
 			})
 
 			//child changed
 			listProducts.on('child_changed', snapshot => {
-				const product = snapshot.val()
 				this.updateProduct({
 					id: snapshot.key!,
-					updates: product
+					updates: snapshot.val()
 				})
 			})
 

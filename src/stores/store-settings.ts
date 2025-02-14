@@ -74,16 +74,16 @@ export const useSettingsStore = defineStore('storeSettings', {
 				this.listKeys = Object.keys(snapshot.val())
 			})
 		},
-		async removeListFromUserSettings(listId: string) {
-			const removingSelectedList = listId === this.settings.list
-			const userId = firebaseAuth.currentUser?.uid
-			const listSettings = firebaseDb.ref(
-				'users/' + userId + '/lists/' + listId
-			)
+		removeListFromUserSettings(listId: string) {
 			try {
-				await listSettings.remove()
+				const removingSelectedList = listId === this.settings.list
+				const userId = firebaseAuth.currentUser?.uid
+				const listSettings = firebaseDb.ref(
+					'users/' + userId + '/lists/' + listId
+				)
+				void listSettings.remove()
 				if (this.getListsNames.length && removingSelectedList) {
-					await this.setList(this.getListsNames[0]?.value as string)
+					this.setList(this.getListsNames[0]?.value as string)
 				}
 			} catch (error: unknown) {
 				showErrorMessage((error as Error).message)
@@ -96,73 +96,67 @@ export const useSettingsStore = defineStore('storeSettings', {
 				}
 			})
 		},
-		async clearProducts() {
+		clearProducts() {
 			const storeCatalog = useCatalogStore()
 			const storeList = useListStore()
-			await Promise.all([
+			void Promise.all([
 				storeCatalog.clearProducts(),
 				storeCatalog.setProductsDownloaded(false),
 				storeList.clearProducts(),
 				storeList.setProductsDownloaded(false)
 			])
 		},
-		async setList(value: string) {
-			const storeCatalog = useCatalogStore()
-			const storeList = useListStore()
+		setList(value: string) {
+			try {
+				const storeCatalog = useCatalogStore()
+				const storeList = useListStore()
 
-			await this.clearProducts()
+				this.clearProducts()
 
-			const userId = firebaseAuth.currentUser?.uid
-			let listId = value
+				const userId = firebaseAuth.currentUser?.uid
+				let listId = value
 
-			// if it's new list: create it first
-			if (!this.listKeys.includes(listId)) {
-				listId = uid()
-				const listRef = firebaseDb.ref('users/' + userId + '/lists')
-				await listRef.update({ [listId]: 'admin' }, error => {
-					if (error) showErrorMessage(error.message)
-				})
-				const listCreationRef = firebaseDb.ref('lists/' + listId)
-				try {
-					await listCreationRef.set({ name: value })
-				} catch (error: unknown) {
-					showErrorMessage((error as Error).message)
+				// if it's new list: create it first
+				if (!this.listKeys.includes(listId)) {
+					listId = uid()
+					const listRef = firebaseDb.ref('users/' + userId + '/lists')
+					void listRef.update({ [listId]: 'admin' })
+					const listCreationRef = firebaseDb.ref('lists/' + listId)
+					void listCreationRef.set({ name: value })
+				} else if (!Object.keys(this.listsPermissions).includes(listId)) {
+					const listCreationRef = firebaseDb.ref('users/' + userId + '/lists')
+					void listCreationRef.update({ [listId]: 'shared' })
 				}
-			} else if (!Object.keys(this.listsPermissions).includes(listId)) {
-				const listCreationRef = firebaseDb.ref('users/' + userId + '/lists')
-				await listCreationRef.update({ [listId]: 'shared' }, error => {
-					if (error) showErrorMessage(error.message)
-				})
-			}
 
-			const userRef = firebaseDb.ref('users/' + userId)
-			await userRef.update({ list: listId }, error => {
-				if (error) showErrorMessage(error.message)
-			})
+				const userRef = firebaseDb.ref('users/' + userId)
+				void userRef.update({ list: listId })
 
-			await Promise.all([storeList.fbReadData(), storeCatalog.fbReadData()])
-		},
-		async setUsername(value: string) {
-			const userId = firebaseAuth.currentUser?.uid
-			const userRef = firebaseDb.ref('users/' + userId)
-			try {
-				await userRef.update({ username: value })
+				void Promise.all([storeList.fbReadData(), storeCatalog.fbReadData()])
 			} catch (error: unknown) {
 				showErrorMessage((error as Error).message)
 			}
 		},
-		async updateListName(value: string) {
-			const listRef = firebaseDb.ref('lists/' + this.settings.list)
+		setUsername(value: string) {
 			try {
-				await listRef.update({ name: value })
+				const userId = firebaseAuth.currentUser?.uid
+				const userRef = firebaseDb.ref('users/' + userId)
+				void userRef.update({ username: value })
 			} catch (error: unknown) {
 				showErrorMessage((error as Error).message)
 			}
 		},
-		async cloneList(listName: string) {
+		updateListName(value: string) {
+			try {
+				const listRef = firebaseDb.ref('lists/' + this.settings.list)
+				void listRef.update({ name: value })
+			} catch (error: unknown) {
+				showErrorMessage((error as Error).message)
+			}
+		},
+		cloneList(listName: string) {
 			const storeCatalog = useCatalogStore()
 			const products = storeCatalog.products
-			await this.setList(listName)
+			this.setList(listName)
 			Object.values(products).forEach((element: Product) => {
 				void storeCatalog.fbAddProduct({
 					id: uid(),
@@ -190,18 +184,25 @@ export const useSettingsStore = defineStore('storeSettings', {
 
 			// child added
 			listSettings.on('child_added', snapshot => {
-				const setting = snapshot.val()
 				this.updateSetting({
 					id: snapshot.key! as keyof Settings,
-					updates: setting
+					updates: snapshot.val()
+				})
+			})
+
+			// child updated
+			listSettings.on('child_changed', snapshot => {
+				this.updateSetting({
+					id: snapshot.key! as keyof Settings,
+					updates: snapshot.val()
 				})
 			})
 		},
-		async fbDeleteList() {
-			const listRef = firebaseDb.ref('lists/' + this.getSettings.list)
+		fbDeleteList() {
 			try {
-				await listRef.remove() // No callback needed
-				await this.removeListFromUserSettings(this.getSettings.list)
+				const listRef = firebaseDb.ref('lists/' + this.getSettings.list)
+				void listRef.remove()
+				void this.removeListFromUserSettings(this.getSettings.list)
 			} catch (error: unknown) {
 				showErrorMessage((error as Error).message)
 			}

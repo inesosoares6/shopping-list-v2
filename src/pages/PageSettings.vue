@@ -297,7 +297,7 @@ const guestListActions: Ref<
 		}
 	},
 	{
-		label: 'Clone list',
+		label: 'Clone catalog',
 		key: GuestActions.CLONE,
 		onClickAction: () => showDialog(GuestActions.CLONE)
 	},

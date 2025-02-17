@@ -84,7 +84,7 @@
 						:name="action?.note ? 'info' : 'chevron_right'"
 						:color="getColor(action.key)"
 					>
-						<q-tooltip>
+						<q-tooltip v-if="action?.note">
 							{{ action?.note }}
 						</q-tooltip>
 					</q-icon>

@@ -9,7 +9,7 @@ import { firebaseAuth, firebaseDb } from 'src/boot/firebase'
 import { showErrorMessage } from 'src/functions/utils'
 import { useCatalogStore } from './store-catalog'
 import { useListStore } from './store-list'
-import { uid } from 'quasar'
+import { Notify, uid } from 'quasar'
 
 export const useSettingsStore = defineStore('storeSettings', {
 	state: (): StateSettings => ({
@@ -28,12 +28,13 @@ export const useSettingsStore = defineStore('storeSettings', {
 			state.settingsDownloaded && Object.values(state.settings).some(e => !e),
 		getListsNames: state =>
 			Object.entries(state.listNames).map(([key, value]) => ({
-				label: value,
+				label: value.name,
 				value: key
 			})),
-		getListName: state => state.listNames[state.settings.list],
+		getListName: state => state.listNames[state.settings.list]?.name,
 		getIsListAdmin: state =>
-			state.listsPermissions[state.settings.list] === 'admin'
+			state.listsPermissions[state.settings.list] === 'admin',
+		getIsListBlocked: state => state.listNames[state.settings.list]?.blocked
 	},
 	actions: {
 		clearSettings() {
@@ -63,7 +64,8 @@ export const useSettingsStore = defineStore('storeSettings', {
 				const listRef = firebaseDb.ref('lists/' + id)
 				listRef.on('value', snapshot => {
 					if (snapshot.val()?.name) {
-						this.listNames[id] = snapshot.val()?.name
+						const { name, blocked } = snapshot.val()
+						this.listNames[id] = { name, blocked }
 					}
 				})
 			})
@@ -122,7 +124,11 @@ export const useSettingsStore = defineStore('storeSettings', {
 					const listRef = firebaseDb.ref('users/' + userId + '/lists')
 					void listRef.update({ [listId]: 'admin' })
 					const listCreationRef = firebaseDb.ref('lists/' + listId)
-					void listCreationRef.set({ name: value })
+					void listCreationRef.set({
+						name: value,
+						owner: userId,
+						blocked: false
+					})
 				} else if (!Object.keys(this.listsPermissions).includes(listId)) {
 					const listCreationRef = firebaseDb.ref('users/' + userId + '/lists')
 					void listCreationRef.update({ [listId]: 'shared' })
@@ -168,6 +174,18 @@ export const useSettingsStore = defineStore('storeSettings', {
 					}
 				})
 			})
+		},
+		handleWritingPrivileges() {
+			try {
+				const isListBlocked = this.getIsListBlocked
+				const listRef = firebaseDb.ref('lists/' + this.settings.list)
+				void listRef.update({ blocked: !isListBlocked })
+				Notify.create(
+					`Writing privileges ${isListBlocked ? 'un' : ''}blocked for guest users`
+				)
+			} catch (error: unknown) {
+				showErrorMessage((error as Error).message)
+			}
 		},
 		fbReadData() {
 			const userId = firebaseAuth.currentUser?.uid

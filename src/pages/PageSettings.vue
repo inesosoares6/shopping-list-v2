@@ -118,11 +118,12 @@ const storeAuth = useAuthStore()
 
 const options = computed(() => storeSettings.getListsNames)
 const isListAdmin = computed(() => storeSettings.getIsListAdmin)
+const isListBlocked = computed(() => storeSettings.getIsListBlocked)
 const getNumberOfProducts = computed(() => storeCatalog.getNumberOfProducts)
 
 const list = computed({
 	get() {
-		return storeSettings.listNames[storeSettings.getSettings.list]
+		return storeSettings.getListName
 	},
 	set(newValue: string) {
 		void storeSettings.setList(newValue)
@@ -137,6 +138,11 @@ const username = computed({
 		void storeSettings.setUsername(newValue)
 	}
 })
+
+const blockListText = computed(
+	() =>
+		`${isListBlocked.value ? 'Unb' : 'B'}lock writing privileges for guest users`
+)
 
 const getWarningColor = (key: string) =>
 	['delete', 'remove'].includes(key.split('_')[0] as string)
@@ -272,6 +278,11 @@ const adminListActions: Ref<
 		label: 'Change list name',
 		key: AdminActions.LIST_NAME,
 		onClickAction: () => showDialog(AdminActions.LIST_NAME)
+	},
+	{
+		label: blockListText,
+		key: AdminActions.LIST_NAME,
+		onClickAction: () => storeSettings.handleWritingPrivileges()
 	},
 	{
 		label: 'Delete list',

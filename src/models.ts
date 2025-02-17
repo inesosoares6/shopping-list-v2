@@ -42,7 +42,7 @@ export interface StateSettings {
 	settings: Settings
 	settingsDownloaded: boolean
 	listsPermissions: Record<string, string>
-	listNames: Record<string, string>
+	listNames: Record<string, Record<string, string>>
 	listKeys: string[]
 }
 

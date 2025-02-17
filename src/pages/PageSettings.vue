@@ -209,7 +209,7 @@ const showDialog = (key: KeyActionsType) => {
 			title: 'Remove shared list',
 			message: 'Are you sure you want to remove this list from your account?'
 		},
-		[GuestActions.CLONE]: {
+		[CommonActions.CLONE]: {
 			successAction: value => {
 				void storeSettings.cloneList(value)
 			},
@@ -264,6 +264,11 @@ const commonListActions: Ref<SettingsItem<CommonActions>[]> = ref([
 				text: storeSettings.getSettings.list
 			})
 		}
+	},
+	{
+		label: 'Clone catalog',
+		key: CommonActions.CLONE,
+		onClickAction: () => showDialog(CommonActions.CLONE)
 	}
 ])
 
@@ -288,11 +293,6 @@ const adminListActions: Ref<SettingsItem<KeyActionsType>[]> = ref([
 
 const guestListActions: Ref<SettingsItem<KeyActionsType>[]> = ref([
 	...commonListActions.value,
-	{
-		label: 'Clone catalog',
-		key: GuestActions.CLONE,
-		onClickAction: () => showDialog(GuestActions.CLONE)
-	},
 	{
 		label: 'Remove list',
 		key: GuestActions.REMOVE_LIST,

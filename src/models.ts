@@ -51,7 +51,8 @@ export enum GeneralActions {
 }
 
 export enum CommonActions {
-	SHARE = 'share'
+	SHARE = 'share',
+	CLONE = 'clone'
 }
 
 export enum AdminActions {
@@ -61,8 +62,7 @@ export enum AdminActions {
 
 export enum GuestActions {
 	REMOVE_LIST = 'remove_list',
-	CLONE = 'clone',
-  TOOLTIP = 'tooltip'
+	TOOLTIP = 'tooltip'
 }
 
 export enum AccountActions {
@@ -78,10 +78,15 @@ export enum AccessType {
 }
 
 export type SettingsItem<T> = {
-  label: string
-  key: T
-  onClickAction?: () => void
-  note?: string
+	label: string
+	key: T
+	onClickAction?: () => void
+	note?: string
 }
 
-export type KeyActionsType = AdminActions | CommonActions | GuestActions | AccountActions | GeneralActions
+export type KeyActionsType =
+	| AdminActions
+	| CommonActions
+	| GuestActions
+	| AccountActions
+	| GeneralActions

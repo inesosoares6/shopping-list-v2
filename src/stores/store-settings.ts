@@ -33,7 +33,8 @@ export const useSettingsStore = defineStore('storeSettings', {
 			})),
 		getListName: state => state.listNames[state.settings.list]?.name,
 		getIsListAdmin: state =>
-			state.listsPermissions[state.settings.list] === 'admin',
+			state.listNames[state.settings.list]?.owner ===
+			firebaseAuth.currentUser?.uid,
 		getIsListBlocked: state => state.listNames[state.settings.list]?.blocked
 	},
 	actions: {
@@ -64,8 +65,8 @@ export const useSettingsStore = defineStore('storeSettings', {
 				const listRef = firebaseDb.ref('lists/' + id)
 				listRef.on('value', snapshot => {
 					if (snapshot.val()?.name) {
-						const { name, blocked } = snapshot.val()
-						this.listNames[id] = { name, blocked }
+						const { name, blocked, owner } = snapshot.val()
+						this.listNames[id] = { name, blocked, owner }
 					}
 				})
 			})
@@ -121,17 +122,18 @@ export const useSettingsStore = defineStore('storeSettings', {
 				// if it's new list: create it first
 				if (!this.listKeys.includes(listId)) {
 					listId = uid()
-					const listRef = firebaseDb.ref('users/' + userId + '/lists')
-					void listRef.update({ [listId]: 'admin' })
 					const listCreationRef = firebaseDb.ref('lists/' + listId)
 					void listCreationRef.set({
 						name: value,
 						owner: userId,
 						blocked: false
 					})
-				} else if (!Object.keys(this.listsPermissions).includes(listId)) {
-					const listCreationRef = firebaseDb.ref('users/' + userId + '/lists')
-					void listCreationRef.update({ [listId]: 'shared' })
+				}
+
+        // add list to user lists
+				if (!Object.keys(this.listsPermissions).includes(listId)) {
+					const listsRef = firebaseDb.ref('users/' + userId + '/lists')
+					void listsRef.update({ [listId]: true })
 				}
 
 				const userRef = firebaseDb.ref('users/' + userId)

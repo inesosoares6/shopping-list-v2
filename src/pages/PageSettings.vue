@@ -75,19 +75,19 @@
 				@click="action.onClickAction"
 			>
 				<q-item-section>
-					<q-item-label
-						:class="{
-							'text-red': getWarningColor(action.key)
-						}"
-					>
+					<q-item-label :class="`text-${getColor(action.key)}`">
 						{{ action.label }}
 					</q-item-label>
 				</q-item-section>
 				<q-item-section side>
 					<q-icon
-						name="chevron_right"
-						:color="getWarningColor(action.key) ? 'red' : ''"
-					/>
+						:name="action?.note ? 'info' : 'chevron_right'"
+						:color="getColor(action.key)"
+					>
+						<q-tooltip>
+							{{ action?.note }}
+						</q-tooltip>
+					</q-icon>
 				</q-item-section>
 			</q-item>
 		</q-list>
@@ -111,6 +111,7 @@ import {
 	GeneralActions,
 	GuestActions
 } from 'src/models'
+import type { KeyActionsType, SettingsItem } from 'src/models'
 
 const storeSettings = useSettingsStore()
 const storeCatalog = useCatalogStore()
@@ -143,14 +144,15 @@ const blockListText = computed(
 	() =>
 		`${isListBlocked.value ? 'Unb' : 'B'}lock writing privileges for guest users`
 )
-
-const getWarningColor = (key: string) =>
-	['delete', 'remove'].includes(key.split('_')[0] as string)
+const getColor = (key: KeyActionsType) => {
+	const action = key.split('_')[0] as string
+	if (['delete', 'remove'].includes(action)) return 'red'
+	if (key === GuestActions.TOOLTIP) return 'grey'
+	return ''
+}
 
 const $q = useQuasar()
-const showDialog = (
-	key: AdminActions | GuestActions | AccountActions | GeneralActions
-) => {
+const showDialog = (key: KeyActionsType) => {
 	const details: Record<
 		string,
 		{
@@ -234,13 +236,7 @@ const showDialog = (
 	})
 }
 
-const accountActions: Ref<
-	{
-		label: string
-		key: AccountActions
-		onClickAction: () => void
-	}[]
-> = ref([
+const accountActions: Ref<SettingsItem<AccountActions>[]> = ref([
 	{
 		label: 'Change email',
 		key: AccountActions.EMAIL,
@@ -258,13 +254,7 @@ const accountActions: Ref<
 	}
 ])
 
-const adminListActions: Ref<
-	{
-		label: string
-		key: AdminActions
-		onClickAction: () => void
-	}[]
-> = ref([
+const adminListActions: Ref<SettingsItem<AdminActions>[]> = ref([
 	{
 		label: 'Share list',
 		key: AdminActions.SHARE,
@@ -291,13 +281,7 @@ const adminListActions: Ref<
 	}
 ])
 
-const guestListActions: Ref<
-	{
-		label: string
-		key: GuestActions
-		onClickAction: () => void
-	}[]
-> = ref([
+const guestListActions: Ref<SettingsItem<GuestActions>[]> = ref([
 	{
 		label: 'Share list',
 		key: GuestActions.SHARE,
@@ -316,6 +300,11 @@ const guestListActions: Ref<
 		label: 'Remove list',
 		key: GuestActions.REMOVE_LIST,
 		onClickAction: () => showDialog(GuestActions.REMOVE_LIST)
+	},
+	{
+		label: 'The list is currently blocked by the owner',
+		key: GuestActions.TOOLTIP,
+		note: 'The owner blocked your writing privileges. You can only read the data, share and clone the list.'
 	}
 ])
 

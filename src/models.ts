@@ -50,14 +50,16 @@ export enum GeneralActions {
 	ADD_LIST = 'add_list'
 }
 
+export enum CommonActions {
+	SHARE = 'share'
+}
+
 export enum AdminActions {
-	SHARE = 'share',
 	DELETE_LIST = 'delete_list',
 	LIST_NAME = 'list_name'
 }
 
 export enum GuestActions {
-	SHARE = 'share',
 	REMOVE_LIST = 'remove_list',
 	CLONE = 'clone',
   TOOLTIP = 'tooltip'
@@ -82,4 +84,4 @@ export type SettingsItem<T> = {
   note?: string
 }
 
-export type KeyActionsType = AdminActions | GuestActions | AccountActions | GeneralActions
+export type KeyActionsType = AdminActions | CommonActions | GuestActions | AccountActions | GeneralActions

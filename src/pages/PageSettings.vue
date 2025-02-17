@@ -109,7 +109,8 @@ import {
 	AccountActions,
 	AdminActions,
 	GeneralActions,
-	GuestActions
+	GuestActions,
+	CommonActions
 } from 'src/models'
 import type { KeyActionsType, SettingsItem } from 'src/models'
 
@@ -254,16 +255,20 @@ const accountActions: Ref<SettingsItem<AccountActions>[]> = ref([
 	}
 ])
 
-const adminListActions: Ref<SettingsItem<AdminActions>[]> = ref([
+const commonListActions: Ref<SettingsItem<CommonActions>[]> = ref([
 	{
 		label: 'Share list',
-		key: AdminActions.SHARE,
+		key: CommonActions.SHARE,
 		onClickAction: async () => {
 			await Share.share({
 				text: storeSettings.getSettings.list
 			})
 		}
-	},
+	}
+])
+
+const adminListActions: Ref<SettingsItem<KeyActionsType>[]> = ref([
+	...commonListActions.value,
 	{
 		label: 'Change list name',
 		key: AdminActions.LIST_NAME,
@@ -281,16 +286,8 @@ const adminListActions: Ref<SettingsItem<AdminActions>[]> = ref([
 	}
 ])
 
-const guestListActions: Ref<SettingsItem<GuestActions>[]> = ref([
-	{
-		label: 'Share list',
-		key: GuestActions.SHARE,
-		onClickAction: async () => {
-			await Share.share({
-				text: storeSettings.getSettings.list
-			})
-		}
-	},
+const guestListActions: Ref<SettingsItem<KeyActionsType>[]> = ref([
+	...commonListActions.value,
 	{
 		label: 'Clone catalog',
 		key: GuestActions.CLONE,

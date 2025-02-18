@@ -310,7 +310,9 @@ const actionItems = computed(() => {
 		{
 			key: AccessType.GUEST,
 			title: `Manage list as guest - ${list.value}`,
-			items: guestListActions.value
+			items: isListBlocked.value
+				? guestListActions.value
+				: guestListActions.value.filter(obj => obj.key !== GuestActions.TOOLTIP)
 		},
 		{
 			key: AccessType.ADMIN,

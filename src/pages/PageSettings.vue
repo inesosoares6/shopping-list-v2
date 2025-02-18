@@ -194,7 +194,7 @@ const showDialog = (key: KeyActionsType) => {
 				void storeSettings.updateListName(value)
 			},
 			title: `Update list name (current: ${list.value})`,
-			message: 'Write the new list name',
+			message: 'Write here the new list name:',
 			promptType: 'text'
 		},
 		[GeneralActions.ADD_LIST]: {
@@ -214,14 +214,14 @@ const showDialog = (key: KeyActionsType) => {
 				void storeSettings.cloneList(value)
 			},
 			title: `Clone catalog from ${list.value}`,
-			message: `The new list will be created with ${getNumberOfProducts.value} products. Write its name`,
+			message: `The new list will be created with ${getNumberOfProducts.value} products. Write here its name:`,
 			promptType: 'text'
 		}
 	}
 
 	$q.dialog({
 		title: details[key]?.title ?? `Update ${key}`,
-		message: details[key]?.message ?? `Write the new ${key}`,
+		message: details[key]?.message ?? `Write here the new ${key}:`,
 		prompt: {
 			model: '',
 			type: details[key]?.promptType as PromptInputType

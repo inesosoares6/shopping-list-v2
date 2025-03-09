@@ -15,7 +15,10 @@
 			side
 			top
 		>
-			<q-checkbox v-model="isCompleted" />
+			<q-checkbox
+				v-model="isCompleted"
+				class="no-pointer-events"
+			/>
 		</q-item-section>
 		<q-item-section>
 			<q-item-label :class="{ 'text-strike': product.completed }">
